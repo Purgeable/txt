@@ -22,16 +22,15 @@ STATUS_PAT = re.compile(r'\[\s*(\w+)\s*\]')
 DATETIME_PAT = re.compile(r'([012]?\d:\d\d [0123]\d\.[01]\d\.\d\d\d\d)')
     
 def get_status_letter(string, status_re = STATUS_PAT):
-    {
     status_list = status_re.findall(string)
     if len(status_list) > 0:
-        result['status'] = status_list[0]
-        }
- 
- # note will skip [x] after first occurence
- assert get_status_letter('[s] [z]') = 's'
- # todo - ниже правильно?
- assert get_status_letter('[abc]') is None
+        return status_list[0]
+
+# note will skip [x] after first occurence
+assert get_status_letter('[s] [z]') = 's'
+
+# todo - ниже правильно?
+assert get_status_letter('[abc]') is None
  
 def get_datetime_list(string, datetime_re = DATETIME_PAT):
     return map(ts_to_datetime, datetime_re.findall(string))
@@ -65,17 +64,12 @@ def parse_subtask(s):
         result['started'] = datetime_list[0]
         result['ended'] = datetime_list[1]
         
-    # allocate description 
+    # get testxline description for subtask
     result['desc'] = get_description(s)
    
     return result
 
 
-doc2 = """worktitle
-    subtask description 23:30 06.02.2016
-    23:30 06.02.2016 23:36 06.02.2016 subtask description 2
-    [s] 23:30 06.02.2016 subtask description 3"""
-    
 #rules for parsing doc2:
 #    text starting with no offset (at start of string) is title
 #    four spaces offset is subtask line 
@@ -85,6 +79,11 @@ doc2 = """worktitle
 #    one timestamp is 'last checked' date and time 
 #    two timestamps is 'started' and 'ended' date and time 
 #    remaining text after popping out status and timestamp(s) is 'desc'
+
+doc2 = """worktitle
+    subtask description 23:30 06.02.2016
+    23:30 06.02.2016 23:36 06.02.2016 subtask description 2
+    [s] 23:30 06.02.2016 subtask description 3"""
 
 subtask_dict_sample = {'status': 's', 
 'last checked': None, 
@@ -97,7 +96,6 @@ assert subtask_dict_sample == parse_subtask('[s] 23:30 06.02.2016 2:30 09.02.201
 assert subtask_dict_sample == parse_subtask('[s] subtask description 3 23:30 06.02.2016 2:30 09.02.2016')
 # more whitespace
 assert subtask_dict_sample == parse_subtask('[s]    subtask description 3     23:30 06.02.2016    2:30 09.02.2016   ')
-
 
 ##############
 # May delete #
