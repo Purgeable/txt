@@ -10,27 +10,6 @@ import yaml
 from datetime import datetime
 import re
 
-doc2 = """worktitle
-    subtask description 23:30 06.02.2016
-    23:30 06.02.2016 23:36 06.02.2016 subtask description 2
-    [s] 23:30 06.02.2016 subtask description 3"""
-    
-#rules for parsing doc2:
-#    text starting with no offset (at start of string) is title
-#    four spaces offset is subtask line 
-
-# parsing subtasks 
-#    single letter in square brackets anywhere in subtask line is status flag + only one [x] is taken 
-#    one timestamp is 'last checked' date and time 
-#    two timestamps is 'started' and 'ended' date and time 
-#    remaining text after popping out status and timestamp(s) is 'desc'
-
-subtask_dict_sample = {'status': 's', 
-'last checked': None, 
-'started':      datetime(2016, 2, 6, 23, 30), 
-'ended':        datetime(2016, 2, 9, 2, 30),
-'desc':         'subtask description 3'}
-
 def ts_to_datetime(timestamp):
     return datetime.strptime(timestamp, '%H:%M %d.%m.%Y')
 
@@ -90,6 +69,28 @@ def parse_subtask(s):
     result['desc'] = get_description(s)
    
     return result
+
+
+doc2 = """worktitle
+    subtask description 23:30 06.02.2016
+    23:30 06.02.2016 23:36 06.02.2016 subtask description 2
+    [s] 23:30 06.02.2016 subtask description 3"""
+    
+#rules for parsing doc2:
+#    text starting with no offset (at start of string) is title
+#    four spaces offset is subtask line 
+
+# parsing subtasks 
+#    single letter in square brackets anywhere in subtask line is status flag + only one [x] is taken 
+#    one timestamp is 'last checked' date and time 
+#    two timestamps is 'started' and 'ended' date and time 
+#    remaining text after popping out status and timestamp(s) is 'desc'
+
+subtask_dict_sample = {'status': 's', 
+'last checked': None, 
+'started':      datetime(2016, 2, 6, 23, 30), 
+'ended':        datetime(2016, 2, 9, 2, 30),
+'desc':         'subtask description 3'}
 
 assert subtask_dict_sample == parse_subtask('[s] 23:30 06.02.2016 ... 2:30 09.02.2016 subtask description 3')
 assert subtask_dict_sample == parse_subtask('[s] 23:30 06.02.2016 2:30 09.02.2016 subtask description 3')
