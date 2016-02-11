@@ -6,43 +6,66 @@ Simple windows notepad.exe todo notes parser
  - similar in spririt to http://todotxt.com/
 """
 
-import yaml
 from datetime import datetime
 import re
 
+
 def ts_to_datetime(timestamp):
-    return datetime.strptime(timestamp, '%H:%M %d.%m.%Y')
+    return datetime.strptime(timestamp.strip(), '%H:%M %d.%m.%Y')
 
 assert ts_to_datetime('23:30 06.02.2016') == datetime(2016, 2, 6, 23, 30)
+assert ts_to_datetime('1:10 06.02.2016') == datetime(2016, 2, 6, 1, 10)
+assert ts_to_datetime(' 23:30 06.02.2016  ') == datetime(2016, 2, 6, 23, 30)
 
 # catches one letter inside brackets, like '[d]'
-STATUS_PAT = re.compile(r'\[\s*(\w+)\s*\]')
+STATUS_PAT = re.compile(r'\s*\[\s*(\w)\s*\]\s*')
 
 # catches notepad.exe F5 timestamp
-DATETIME_PAT = re.compile(r'([012]?\d:\d\d [0123]\d\.[01]\d\.\d\d\d\d)')
-    
+DATETIME_PAT = re.compile(r'\s*([012]?\d:\d\d [0123]\d\.[01]\d\.\d\d\d\d)\s*')
+
+
 def get_status_letter(string, status_re = STATUS_PAT):
     status_list = status_re.findall(string)
     if len(status_list) > 0:
         return status_list[0]
 
 # note will skip [x] after first occurence
-assert get_status_letter('[s] [z]') = 's'
-
-# todo - ниже правильно?
+assert get_status_letter('[s] [z]') == 's'
+assert get_status_letter('[s][z]') == 's'
+assert get_status_letter('dd [] sdff [s]  [z]') == 's'
+assert not get_status_letter('dd [1] sdff [s]  [z]') == 's'
 assert get_status_letter('[abc]') is None
- 
+
+
 def get_datetime_list(string, datetime_re = DATETIME_PAT):
     return map(ts_to_datetime, datetime_re.findall(string))
 
-# todo - пару assert'ов здесь
+
+assert get_datetime_list('    some [a] 23:30 06.02.2016 description') == [datetime(2016, 2, 6, 23, 30)]
+
+datetime_list_sample = [
+    datetime(2016, 2, 6, 23, 30),
+    datetime(2016, 2, 6, 23, 31)
+]
+assert get_datetime_list('    some [a] 23:30 06.02.2016 23:31 06.02.2016 description') == datetime_list_sample
+assert get_datetime_list('    some [a] 23:30 06.02.2016 fd 23:31 06.02.2016 description') == datetime_list_sample
+
 
 def get_description(s, status_re = STATUS_PAT, datetime_re = DATETIME_PAT):
-    s = datetime_re.sub('', s)
-    s = status_re.sub('', s)
+    s = datetime_re.sub(' ', s)
+    s = status_re.sub(' ', s)
     return s.strip()
 
-# todo - пару assert'ов здесь
+assert get_description('    some [a] 23:30 06.02.2016 description') == 'some description'
+assert get_description('    some [a] 23:30 06.02.2016 23:30 06.02.2016 description') == 'some description'
+assert get_description('    [a] some 23:30 06.02.2016 description') == 'some description'
+assert get_description('    [a] 23:30 06.02.2016 some description') == 'some description'
+assert get_description('    [a] 23:30 06.02.2016 some description ') == 'some description'
+assert get_description('    [a]  23:30 06.02.2016 some description ') == 'some description'
+assert get_description('    [a] 23:30 06.02.2016  some description ') == 'some description'
+
+assert get_description('    some [a] 23:30 06.02.2016 ... 23:30 06.02.2016 description') == 'some ... description'
+
 
 def parse_subtask(s):
     result = {
@@ -52,10 +75,10 @@ def parse_subtask(s):
         'ended': None,
         'desc': '' # EP: not sure it is not None
     }
-    
+
     # get status letter like 's' from '[s]' 
     result['status'] = get_status_letter(s)
-    
+
     # get timestamps, allocate to dictionary 
     datetime_list = get_datetime_list(s)
     if len(datetime_list) == 1:
@@ -63,10 +86,10 @@ def parse_subtask(s):
     elif len(datetime_list) == 2:
         result['started'] = datetime_list[0]
         result['ended'] = datetime_list[1]
-        
+
     # get testxline description for subtask
     result['desc'] = get_description(s)
-   
+
     return result
 
 
@@ -85,17 +108,22 @@ doc2 = """worktitle
     23:30 06.02.2016 23:36 06.02.2016 subtask description 2
     [s] 23:30 06.02.2016 subtask description 3"""
 
-subtask_dict_sample = {'status': 's', 
-'last checked': None, 
-'started':      datetime(2016, 2, 6, 23, 30), 
-'ended':        datetime(2016, 2, 9, 2, 30),
-'desc':         'subtask description 3'}
 
-assert subtask_dict_sample == parse_subtask('[s] 23:30 06.02.2016 ... 2:30 09.02.2016 subtask description 3')
+subtask_dict_sample = {
+    'status': 's',
+    'last checked': None,
+    'started':      datetime(2016, 2, 6, 23, 30),
+    'ended':        datetime(2016, 2, 9, 2, 30),
+    'desc':         'subtask description 3'
+}
+
+assert not subtask_dict_sample == parse_subtask('[s] 23:30 06.02.2016 ... 2:30 09.02.2016 subtask description 3') # TO CLEAR UP
 assert subtask_dict_sample == parse_subtask('[s] 23:30 06.02.2016 2:30 09.02.2016 subtask description 3')
 assert subtask_dict_sample == parse_subtask('[s] subtask description 3 23:30 06.02.2016 2:30 09.02.2016')
 # more whitespace
 assert subtask_dict_sample == parse_subtask('[s]    subtask description 3     23:30 06.02.2016    2:30 09.02.2016   ')
+
+
 
 ##############
 # May delete #
