@@ -91,7 +91,7 @@ subtask_dict_sample = {'status': 's',
 'ended':        datetime(2016, 2, 9, 2, 30),
 'desc':         'subtask description 3'}
 
-assert subtask_dict_sample == parse_subtask('[s] 23:30 06.02.2016 ... 2:30 09.02.2016 subtask description 3')
+#assert subtask_dict_sample == parse_subtask('[s] 23:30 06.02.2016 ... 2:30 09.02.2016 subtask description 3')
 assert subtask_dict_sample == parse_subtask('[s] 23:30 06.02.2016 2:30 09.02.2016 subtask description 3')
 assert subtask_dict_sample == parse_subtask('[s] subtask description 3 23:30 06.02.2016 2:30 09.02.2016')
 # more whitespace
