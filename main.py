@@ -68,8 +68,7 @@ def parse_subtask(str_):
         result['ended'] = datetime_list[1]
     else:
         # not date provided 
-        pass
-    
+        pass    
 
     # get test line description for subtask
     result['desc'] = get_description(str_)
