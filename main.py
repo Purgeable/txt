@@ -18,9 +18,8 @@ Simple windows notepad.exe todo notes parser
 #    two timestamps is 'started' and 'ended' date and time 
 #    remaining text after popping out status and timestamp(s) is 'desc'
 
-
 from datetime import datetime
-from copy import deepcopy
+from collections import defaultdict
 import re
 
 def ts_to_datetime(timestamp):
@@ -93,35 +92,23 @@ ds = {
     'desc':         'subtask description 3'
 }
 
+
 def is_task(s):
-    if len(s) == 0:
-        return False
-    return (s[0] != ' ') and (s[0] != '\t')
+    return not s.startswith((' ', '\t'))
 
 
 def is_subtask(s):
-    if len(s) == 0:
-        return False
-    return (s[0] == ' ') or (s[0] == '\t')
+    return s.startswith((' ', '\t'))
 
 
 def parse_tasks(doc):
     tasks = []
-    one_task_template = {
-        'title': None,
-        'subtasks': []
-    }
-    one_task = deepcopy(one_task_template)
     for line in filter(None, doc.splitlines(False)):
         if is_task(line):
-            if one_task['title'] is not None:
-                tasks.append(one_task)
-                one_task = deepcopy(one_task_template)
-            one_task['title'] = line.strip()
+            tasks.append(defaultdict(list))
+            tasks[-1]['title'] = line.strip()
         elif is_subtask(line):
-            one_task['subtasks'].append(parse_subtask(line))
-    if one_task['title'] is not None:
-        tasks.append(one_task)
+            tasks[-1]['subtasks'].append(parse_subtask(line))
     return tasks
 
 z = parse_tasks(doc2) 
