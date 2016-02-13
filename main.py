@@ -20,6 +20,7 @@ Simple windows notepad.exe todo notes parser
 
 
 from datetime import datetime
+from copy import deepcopy
 import re
 
 def ts_to_datetime(timestamp):
@@ -75,7 +76,6 @@ def parse_subtask(str_):
 
     return result
 
-# TODO:
 
 doc2 = """worktitle
     [s] 23:30 06.02.2016 subtask description 3
@@ -93,8 +93,37 @@ ds = {
     'desc':         'subtask description 3'
 }
 
+def is_task(s):
+    if len(s) == 0:
+        return False
+    return (s[0] != ' ') and (s[0] != '\t')
+
+
+def is_subtask(s):
+    if len(s) == 0:
+        return False
+    return (s[0] == ' ') or (s[0] == '\t')
+
+
 def parse_tasks(doc):
-    pass
+    tasks = []
+    one_task_template = {
+        'title': None,
+        'subtasks': []
+    }
+    one_task = deepcopy(one_task_template)
+    for line in filter(None, doc.splitlines(False)):
+        if is_task(line):
+            if one_task['title'] is not None:
+                tasks.append(one_task)
+                one_task = deepcopy(one_task_template)
+            one_task['title'] = line.strip()
+        elif is_subtask(line):
+            one_task['subtasks'].append(parse_subtask(line))
+    if one_task['title'] is not None:
+        tasks.append(one_task)
+    return tasks
+
 
 assert parse_tasks(doc2) == [{'title':'worktitle', 'subtasks':[ds,ds]},
                             {'title':'worktitle2', 'subtasks':[ds,ds]}]
