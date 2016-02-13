@@ -87,9 +87,9 @@ worktitle2
 
 ds = {
     'status': 's',
-    'last checked': None,
-    'started':      datetime(2016, 2, 6, 23, 30),
-    'ended':        datetime(2016, 2, 9, 2, 30),
+    'last checked': datetime(2016, 2, 6, 23, 30),
+    'started':      None,
+    'ended':        None,
     'desc':         'subtask description 3'
 }
 
@@ -124,6 +124,7 @@ def parse_tasks(doc):
         tasks.append(one_task)
     return tasks
 
-
-assert parse_tasks(doc2) == [{'title':'worktitle', 'subtasks':[ds,ds]},
+z = parse_tasks(doc2) 
+ref = [{'title':'worktitle', 'subtasks':[ds,ds]},
                             {'title':'worktitle2', 'subtasks':[ds,ds]}]
+assert z == ref
