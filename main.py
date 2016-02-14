@@ -19,7 +19,6 @@ Simple windows notepad.exe todo notes parser
 #    remaining text after popping out status and timestamp(s) is 'desc'
 
 from datetime import datetime
-from collections import defaultdict
 import re
 
 def ts_to_datetime(timestamp):
@@ -105,8 +104,10 @@ def parse_tasks(doc):
     tasks = []
     for line in filter(None, doc.splitlines(False)):
         if is_task(line):
-            tasks.append(defaultdict(list))
-            tasks[-1]['title'] = line.strip()
+            tasks.append({
+                'title': line.strip(),
+                'subtasks': []
+            })
         elif is_subtask(line):
             tasks[-1]['subtasks'].append(parse_subtask(line))
     return tasks
