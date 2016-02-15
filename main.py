@@ -95,20 +95,24 @@ ds = {
 def is_task(s):
     return not s.startswith((' ', '\t'))
 
-
 def is_subtask(s):
     return s.startswith((' ', '\t'))
 
+def lines(doc):
+    # question: что делает filter
+    #           что такое False в .splitlines(False)
+    #           чем это лучше doc.split('\n')
+    return filter(None, doc.splitlines(False))
 
 def parse_tasks(doc):
     tasks = []
-    for line in filter(None, doc.splitlines(False)):
+    for line in lines(doc):
         if is_task(line):
-            tasks.append({
-                'title': line.strip(),
-                'subtasks': []
-            })
+            # note: line.strip() may be substituted with parse_subtask(line), but different test is needed
+            tasks.append({'title': line.strip(),
+                       'subtasks': []})
         elif is_subtask(line):
+            # add to previous element in list 
             tasks[-1]['subtasks'].append(parse_subtask(line))
     return tasks
 
@@ -116,3 +120,16 @@ z = parse_tasks(doc2)
 ref = [{'title':'worktitle', 'subtasks':[ds,ds]},
                             {'title':'worktitle2', 'subtasks':[ds,ds]}]
 assert z == ref
+
+
+# alternative rules:
+#
+# timestamp
+# some work
+# empty line - do nothing 
+#
+
+# workflow:
+#    reorder and overwrite 
+#    file statistics
+#
