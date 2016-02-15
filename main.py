@@ -99,7 +99,7 @@ def is_subtask(s):
     return s.startswith((' ', '\t'))
 
 
-def not_vacuous_lines(doc):
+def filled_lines(doc):
     for line in doc.splitlines(False):
         if len(line.strip()) > 0:
             yield line
