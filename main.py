@@ -98,7 +98,11 @@ def is_task(s):
 def is_subtask(s):
     return s.startswith((' ', '\t'))
 
-def lines(doc):
+
+def not_vacuous_lines(doc):
+    for line in doc.splitlines(False):
+        if len(line.strip()) > 0:
+            yield line
     # question: что делает filter
     #           что такое False в .splitlines(False)
     #           чем это лучше doc.split('\n')
@@ -114,11 +118,15 @@ def lines(doc):
     #
     #           splitlines разобъет строчки и в случае использования в тексте 
     #           Windows переносов строк ('\r\n')
-    return filter(None, doc.splitlines(False))
+    # return filter(None, doc.splitlines(False))
+
+
+assert list(not_vacuous_lines(doc2)) == filter(None, doc2.splitlines(False))
+
 
 def parse_tasks(doc):
     tasks = []
-    for line in lines(doc):
+    for line in not_vacuous_lines(doc):
         if is_task(line):
             # note: line.strip() may be substituted with parse_subtask(line), but different test is needed
             tasks.append({'title': line.strip(),
