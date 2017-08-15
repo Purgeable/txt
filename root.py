@@ -13,11 +13,14 @@ type Todo struct {
 	IsPriority    bool     `json:"isPriority"`
 }
 """
+
+FIELDS = ['id', 'subject', 'project', 'context', 'due', 
+          'completed', 'completed_date', 'archived', 'is_priority'] 
+
 from collections import OrderedDict
 
 # requirements.txt: dataset, docopt
-import dataset 
-
+import dataset
 
 
 # TODO: 
@@ -34,15 +37,16 @@ import dataset
 
 # LIMITATIONS:
 #    one project per task
-#    one сщтеуче per task
+#    one context per task
     
 
 def mask_None_with_empty_string(v: str):
-    if v:
+    if v is not None:
         return str(v)
     else:
         return '' 
 
+ 
 def format_output(k, v):
     if k == 'project':
         if v:
@@ -52,23 +56,30 @@ def format_output(k, v):
             return k, "@{}".format(v)
     return k, mask_None_with_empty_string(v)       
 
+
 class Task:
     
     def __init__(self, input_dict):
         self.dict = input_dict
+
+    def get_id(self):
+        return self.dict['id']
         
     def as_dict(self):
         return self.dict
     
-    def get_id(self):
-        return self.dict['id']
-    
+    def as_formatted_dict(self):
+        odict = OrderedDict()
+        for key in FIELDS:
+            if key in self.dict.keys():
+                value = self.dict[key]
+                k, v = format_output(key, value)
+                odict.update({k: v})
+        return odict
+        
     def __repr__(self):
         return "Task({})".format(self.dict.__repr__())        
     
-    def as_formatted_dict(self):
-        return OrderedDict(format_output(k, v) for k,v in self.dict.items())        
-        
     def __str__(self):
         row = [v for v in self.as_formatted_dict().values()]
         return " ".join(row)
@@ -76,22 +87,40 @@ class Task:
     def __eq__(self, x):
         return bool(self.dict ==  x.dict)
 
+
+#fixture
+d1 = dict(context='home', subject='repair kitchen sink', id=0)
+t1 = Task(d1)
+#test Task methods
+assert t1.get_id() == 0
+assert t1.as_dict() == d1
+assert t1.as_formatted_dict() == OrderedDict([('id', '0'),
+             ('subject', 'repair kitchen sink'),
+             ('context', '@home')])
+assert str(t1) == '0 repair kitchen sink @home'
+assert repr(t1).startswith("Task")
+class MockDict:
+    dict = d1
+assert t1 == MockDict     
+
+
 class TaskList:
     
     def __init__(self, table):
-        """Get *table* pointer to work with"""
+        """Get *table* pointer to work with database.
+        """
         self.table = table
 
     # FIXME: add/update not symmetric
     def add(self, **kwarg):
         return self.table.insert(kwarg)
     
-    def update(self, _dict):
-        self.table.update(_dict, keys=['id'])
+    def update(self, dictionary):
+        self.table.update(dictionary, keys=['id'])
 
-    def get_task(self, _id: int): 
+    def get_task(self, i: int): 
         try:
-            row_dict = self.table.find(id=_id).next()
+            row_dict = self.table.find(id=i).next()
             return Task(row_dict)
         except StopIteration: 
             return False
@@ -99,7 +128,7 @@ class TaskList:
     def write_task(self, task):
         self.update(task.as_dict())
     
-    def all(self):
+    def yield_all(self):
         results = self.table.all()
         for res in results:
             yield Task(res)
@@ -111,7 +140,7 @@ class Presentation:
         self.tasklist = tasklist        
     
     def print(self):
-        for t in self.tasklist.all():            
+        for t in self.tasklist.yield_all():            
             print (t)
 
 
