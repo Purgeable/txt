@@ -21,9 +21,13 @@ import dataset
 
 
 # TODO: 
+# database:    
 #    dump database to file         
 #    read file from database
-
+# more:
+#    cli interface        
+#    compile to exe
+    
 # LATER:
 #    rebase item names as 1, 2, 3...    
 #    no subtasks
@@ -93,7 +97,6 @@ class TaskList:
             return False
 
     def write_task(self, task):
-        # write task at same id as before
         self.update(task.as_dict())
     
     def all(self):
