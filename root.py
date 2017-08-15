@@ -13,7 +13,12 @@ type Todo struct {
 	IsPriority    bool     `json:"isPriority"`
 }
 """
+from collections import OrderedDict
+
+# requirements.txt: dataset, docopt
 import dataset 
+
+
 
 # TODO: 
 #    dump database to file         
@@ -28,12 +33,20 @@ import dataset
 #    one сщтеуче per task
     
 
-def mask_None_with_empty_string(s: str):
-    if s:
-        return str(s)
+def mask_None_with_empty_string(v: str):
+    if v:
+        return str(v)
     else:
         return '' 
 
+def format_output(k, v):
+    if k == 'project':
+        if v:
+            return k, "+{}".format(v)
+    if k == 'context':
+        if v:
+            return k, "@{}".format(v)
+    return k, mask_None_with_empty_string(v)       
 
 class Task:
     
@@ -47,14 +60,13 @@ class Task:
         return self.dict['id']
     
     def __repr__(self):
-        return self.dict.__repr__()        
+        return "Task({})".format(self.dict.__repr__())        
+    
+    def as_formatted_dict(self):
+        return OrderedDict(format_output(k, v) for k,v in self.dict.items())        
         
     def __str__(self):
-        if self.dict['project']:
-            self.dict['project'] = "+{}".format(self.dict['project']) 
-        if self.dict['context']:
-            self.dict['context'] = "@{}".format(self.dict['context'])    
-        row = [mask_None_with_empty_string(v) for v in self.dict.values()]
+        row = [v for v in self.as_formatted_dict().values()]
         return " ".join(row)
         
     def __eq__(self, x):
@@ -63,10 +75,10 @@ class Task:
 class TaskList:
     
     def __init__(self, table):
+        """Get *table* pointer to work with"""
         self.table = table
-        # FIXME: init with connection 
-        # relies on global *table* connection, better if injected
 
+    # FIXME: add/update not symmetric
     def add(self, **kwarg):
         return self.table.insert(kwarg)
     
