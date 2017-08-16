@@ -21,9 +21,9 @@ import dataset
 
 # TODO: 
 # testing of cli interface
-#     python todo new <subj> +<> @<context> due <date> status:<status>
-#     python todo e #
-#     python todo l #
+#     python todo new subj: <subj> +<project> @<context> due: <date_tag> s: <status>
+#     python todo e # subj:
+#     python todo l # 
 
     
 # cli interface for
@@ -59,6 +59,8 @@ import dataset
 #    one context per task
 #    flat tasks, not subtasks    
 #    no clocker 
+#    no color
+#    no priority
 
 def mask_None_with_empty_string(v: str):
     if v is not None:
